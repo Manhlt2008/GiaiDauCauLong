@@ -3,15 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Giải Cầu Lông - Live Data</title>
+    <title>Chăm team 2026</title>
     <!-- Sử dụng thư viện PapaParse để đọc CSV từ URL -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <style>
         :root { --primary: #2c3e50; --secondary: #27ae60; --light: #f4f7f6; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--light); padding: 20px; }
         .container { max-width: 1000px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        h1 { text-align: center; color: var(--primary); }
-        .status { text-align: center; color: #666; font-style: italic; margin-bottom: 20px; }
+        h1 { text-align: center; color: var(--primary); margin-bottom: 10px; }
+        
+        /* Cấu trúc phần thông tin giải đấu */
+        .event-info { text-align: center; margin-bottom: 15px; padding: 15px; background: #eef7f2; border-radius: 8px; }
+        .event-info p { margin: 5px 0; color: #34495e; font-weight: 500; }
+        .event-info strong { color: var(--secondary); }
+
+        .source-link { text-align: center; margin-bottom: 15px; }
+        .source-link a { color: #2980b9; text-decoration: none; font-weight: bold; font-size: 0.9rem; }
+        .source-link a:hover { text-decoration: underline; }
+        
+        .status { text-align: center; color: #666; font-style: italic; margin-bottom: 20px; font-size: 0.85rem; }
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th, td { border: 1px solid #ddd; padding: 12px; text-align: center; }
         th { background: var(--secondary); color: white; }
@@ -22,7 +32,20 @@
 <body>
 
 <div class="container">
-    <h1>🏸 LIVE: GIẢI CẦU LÔNG 2026</h1>
+    <h1>🏸 LIVE: Chăm team 2026</h1>
+    
+    <!-- THÔNG TIN THỜI GIAN VÀ ĐỊA ĐIỂM -->
+    <div class="event-info">
+        <p>📅 Thời gian tổ chức: <strong>17/05/2026</strong></p>
+        <p>📍 Địa điểm: <strong>Hoàng Mai - Hà Nội</strong></p>
+    </div>
+
+    <div class="source-link">
+        <a target="_blank" href="https://docs.google.com/spreadsheets/d/110HWrsepHGWW-wI6sBQspMYKgaqRApB_QKAVV2m5-BY/edit?usp=sharing">
+            🔗 Xem dữ liệu gốc tại Google Sheets
+        </a>
+    </div>
+
     <p class="status" id="load-status">Đang tải dữ liệu từ Google Sheets...</p>
 
     <h2 class="section-title">Bảng Xếp Hạng</h2>
@@ -31,7 +54,6 @@
     <h2 class="section-title">Lịch Thi Đấu</h2>
     <table id="table-matches"><thead></thead><tbody></tbody></table>
 
-    <!-- PHẦN MỚI: DANH SÁCH VẬN ĐỘNG VIÊN -->
     <h2 class="section-title">Danh Sách Vận Động Viên</h2>
     <table id="table-players"><thead></thead><tbody></tbody></table>
 </div>
@@ -59,7 +81,6 @@
                 tbody.innerHTML = "";
 
                 data.forEach((row, index) => {
-                    // Kiểm tra dòng có dữ liệu thực sự (tránh dòng trống chỉ có dấu phẩy)
                     if (row.join('').trim().length === 0) return; 
 
                     const tr = document.createElement('tr');
@@ -79,7 +100,6 @@
         });
     }
 
-    // Gọi hàm load cho cả 3 bảng khi trang web mở ra
     window.onload = function() {
         loadSheetData(sheetLinks.standings, 'table-standings');
         loadSheetData(sheetLinks.matches, 'table-matches');
