@@ -39,8 +39,9 @@
         
         #table-standings tr:nth-child(even), #table-matches tr:nth-child(even), #table-finance tr:nth-child(even) { background-color: #f9f9f9; }
 
-        .section-title { border-left: 5px solid var(--secondary); padding-left: 10px; margin-top: 30px; color: var(--primary); font-size: 1.2rem; }
+        .section-title { border-left: 5px solid var(--secondary); padding-left: 10px; margin-top: 40px; color: var(--primary); font-size: 1.2rem; }
 
+        /* Màu sắc cho các đội */
         .team-row-a { background-color: #e3f2fd !important; }
         .team-row-b { background-color: #fff3e0 !important; }
         .team-row-c { background-color: #f3e5f5 !important; }
@@ -63,17 +64,7 @@
         </a>
     </div>
 
-    <p class="status" id="load-status">Đang tải dữ liệu từ Google Sheets...</p>
-
-    <h2 class="section-title">Quản Lý Thu Chi</h2>
-    <div class="finance-summary">
-        <div class="card bg-total"><h3>Tổng Thu</h3><p id="total-in">0đ</p></div>
-        <div class="card bg-spent"><h3>Tổng Chi</h3><p id="total-out">0đ</p></div>
-        <div class="card bg-remain"><h3>Còn Lại</h3><p id="balance">0đ</p></div>
-    </div>
-    <div class="table-responsive">
-        <table id="table-finance"><thead></thead><tbody></tbody></table>
-    </div>
+    <p class="status" id="load-status">Đang tải dữ liệu...</p>
 
     <h2 class="section-title">Bảng Xếp Hạng</h2>
     <div class="table-responsive">
@@ -89,6 +80,16 @@
     <div class="table-responsive">
         <table id="table-players"><thead></thead><tbody></tbody></table>
     </div>
+
+    <h2 class="section-title">Quản Lý Thu Chi</h2>
+    <div class="finance-summary">
+        <div class="card bg-total"><h3>Tổng Thu</h3><p id="total-in">0đ</p></div>
+        <div class="card bg-spent"><h3>Tổng Chi</h3><p id="total-out">0đ</p></div>
+        <div class="card bg-remain"><h3>Còn Lại</h3><p id="balance">0đ</p></div>
+    </div>
+    <div class="table-responsive">
+        <table id="table-finance"><thead></thead><tbody></tbody></table>
+    </div>
 </div>
 
 <script>
@@ -100,8 +101,13 @@
     };
 
     function formatCurrency(val) {
-        let num = parseInt(val.toString().replace(/[^0-9.-]+/g, ""));
-        return isNaN(num) ? "0đ" : num.toLocaleString('vi-VN') + "đ";
+        return val.toLocaleString('vi-VN') + "đ";
+    }
+
+    function parseMoney(val) {
+        if (!val) return 0;
+        let cleaned = val.toString().replace(/[^0-9]/g, "");
+        return parseInt(cleaned) || 0;
     }
 
     function loadSheetData(url, tableId) {
@@ -124,7 +130,6 @@
 
                     const tr = document.createElement('tr');
                     
-                    // Logic tô màu cho Vận Động Viên
                     if (tableId === 'table-players' && index > 0) {
                         const teamValue = row.join(' ').toUpperCase();
                         if (teamValue.includes('ĐỘI A')) tr.classList.add('team-row-a');
@@ -133,12 +138,9 @@
                         else if (teamValue.includes('ĐỘI D')) tr.classList.add('team-row-d');
                     }
 
-                    // Tính toán tổng thu chi (Giả định cột Thu là cột 3, Chi là cột 4 - bạn có thể chỉnh index nếụ khác)
                     if (tableId === 'table-finance' && index > 0) {
-                        let thu = parseInt(row[2]?.toString().replace(/[^0-9]+/g, "")) || 0;
-                        let chi = parseInt(row[3]?.toString().replace(/[^0-9]+/g, "")) || 0;
-                        totalIn += thu;
-                        totalOut += chi;
+                        totalIn += parseMoney(row[1]);
+                        totalOut += parseMoney(row[4]);
                     }
 
                     row.forEach(cell => {
@@ -154,8 +156,7 @@
                     document.getElementById('total-out').textContent = formatCurrency(totalOut);
                     document.getElementById('balance').textContent = formatCurrency(totalIn - totalOut);
                 }
-
-                document.getElementById('load-status').textContent = "Dữ liệu đã được cập nhật mới nhất";
+                document.getElementById('load-status').textContent = "Cập nhật lúc: " + new Date().toLocaleTimeString();
             }
         });
     }
