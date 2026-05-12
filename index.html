@@ -30,13 +30,17 @@
 
     <h2 class="section-title">Lịch Thi Đấu</h2>
     <table id="table-matches"><thead></thead><tbody></tbody></table>
+
+    <!-- PHẦN MỚI: DANH SÁCH VẬN ĐỘNG VIÊN -->
+    <h2 class="section-title">Danh Sách Vận Động Viên</h2>
+    <table id="table-players"><thead></thead><tbody></tbody></table>
 </div>
 
 <script>
-    // THAY THẾ CÁC LINK DƯỚI ĐÂY BẰNG LINK CSV SAU KHI BẠN "PUBLISH TO WEB"
     const sheetLinks = {
         standings: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRkUoFtqaOaU8pLTLpo6FAd4rdqgH0JPg0tpqP0C8MeiQ9cfD6s9R4-CgDPjbwTicqrGWNzXi25u1dI/pub?gid=0&single=true&output=csv",
-        matches: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRkUoFtqaOaU8pLTLpo6FAd4rdqgH0JPg0tpqP0C8MeiQ9cfD6s9R4-CgDPjbwTicqrGWNzXi25u1dI/pub?gid=1302524989&single=true&output=csve"
+        matches: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRkUoFtqaOaU8pLTLpo6FAd4rdqgH0JPg0tpqP0C8MeiQ9cfD6s9R4-CgDPjbwTicqrGWNzXi25u1dI/pub?gid=1302524989&single=true&output=csv",
+        players: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRkUoFtqaOaU8pLTLpo6FAd4rdqgH0JPg0tpqP0C8MeiQ9cfD6s9R4-CgDPjbwTicqrGWNzXi25u1dI/pub?gid=315332621&single=true&output=csv"
     };
 
     function loadSheetData(url, tableId) {
@@ -46,6 +50,8 @@
             complete: function(results) {
                 const data = results.data;
                 const table = document.getElementById(tableId);
+                if (!table) return;
+                
                 const thead = table.querySelector('thead');
                 const tbody = table.querySelector('tbody');
                 
@@ -53,7 +59,9 @@
                 tbody.innerHTML = "";
 
                 data.forEach((row, index) => {
-                    if (row.length < 2) return; // Bỏ qua dòng trống
+                    // Kiểm tra dòng có dữ liệu thực sự (tránh dòng trống chỉ có dấu phẩy)
+                    if (row.join('').trim().length === 0) return; 
+
                     const tr = document.createElement('tr');
                     row.forEach(cell => {
                         const el = (index === 0) ? document.createElement('th') : document.createElement('td');
@@ -63,15 +71,19 @@
                     (index === 0) ? thead.appendChild(tr) : tbody.appendChild(tr);
                 });
                 document.getElementById('load-status').textContent = "Dữ liệu đã được cập nhật mới nhất";
+            },
+            error: function(err) {
+                console.error("Lỗi khi tải dữ liệu cho " + tableId, err);
+                document.getElementById('load-status').textContent = "Lỗi khi tải dữ liệu. Kiểm tra lại kết nối hoặc link Sheets.";
             }
         });
     }
 
-    // Gọi hàm load khi trang web mở ra
+    // Gọi hàm load cho cả 3 bảng khi trang web mở ra
     window.onload = function() {
-        // Lưu ý: Bạn cần thay link thật vào đây để chạy được
         loadSheetData(sheetLinks.standings, 'table-standings');
         loadSheetData(sheetLinks.matches, 'table-matches');
+        loadSheetData(sheetLinks.players, 'table-players');
     };
 </script>
 
