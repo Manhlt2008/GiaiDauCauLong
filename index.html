@@ -113,7 +113,6 @@
     function refreshAllData() {
         loadingCount = 0;
         document.getElementById('load-status').textContent = "Đang làm mới...";
-        
         loadSheetData(sheetLinks.matches, 'table-matches');
         loadSheetData(sheetLinks.players, 'table-players');
         loadSheetData(sheetLinks.finance, 'table-finance');
@@ -175,8 +174,16 @@
                                 matchResults.push({ group: row[colGroup], teams: row[colTeams], score: row[colScore] });
                             }
                             if (targetId === 'table-finance') {
-                                totalIn += parseInt(row[1]?.toString().replace(/[^0-9]/g, "")) || 0;
-                                totalOut += parseInt(row[7]?.toString().replace(/[^0-9]/g, "")) || 0;
+                                let nameIn = (row[0] || "").toString().toLowerCase();
+                                let nameOut = (row[5] || "").toString().toLowerCase();
+                                
+                                // Logic: Chỉ cộng nếu ô tên không chứa chữ "tổng" (để tránh cộng trùng dòng tổng kết)
+                                if (row[1] && !nameIn.includes("tổng")) {
+                                    totalIn += parseInt(row[1].toString().replace(/[^0-9]/g, "")) || 0;
+                                }
+                                if (row[7] && !nameOut.includes("tổng")) {
+                                    totalOut += parseInt(row[7].toString().replace(/[^0-9]/g, "")) || 0;
+                                }
                             }
                         }
                     });
