@@ -21,7 +21,6 @@
         
         .status { text-align: center; color: #666; font-style: italic; margin-bottom: 15px; font-size: 0.8rem; }
 
-        /* Dashboard Thu Chi */
         .finance-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-top: 20px; }
         .card { padding: 15px; border-radius: 8px; text-align: center; color: white; }
         .card h3 { margin: 0; font-size: 0.9rem; opacity: 0.9; }
@@ -30,18 +29,14 @@
         .bg-spent { background: var(--danger); }
         .bg-remain { background: var(--secondary); }
 
-        /* Hỗ trợ hiển thị trên di động */
         .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; margin-top: 15px; }
-
         table { width: 100%; border-collapse: collapse; min-width: 450px; }
         th, td { border: 1px solid #ddd; padding: 12px 8px; text-align: center; font-size: 0.9rem; }
         th { background: var(--secondary); color: white; white-space: nowrap; }
         
         #table-standings tr:nth-child(even), #table-matches tr:nth-child(even), #table-finance tr:nth-child(even) { background-color: #f9f9f9; }
-
         .section-title { border-left: 5px solid var(--secondary); padding-left: 10px; margin-top: 40px; color: var(--primary); font-size: 1.2rem; }
 
-        /* Màu sắc cho các đội */
         .team-row-a { background-color: #e3f2fd !important; }
         .team-row-b { background-color: #fff3e0 !important; }
         .team-row-c { background-color: #f3e5f5 !important; }
@@ -106,6 +101,7 @@
 
     function parseMoney(val) {
         if (!val) return 0;
+        // Loại bỏ tất cả ký tự không phải số
         let cleaned = val.toString().replace(/[^0-9]/g, "");
         return parseInt(cleaned) || 0;
     }
@@ -128,6 +124,16 @@
                 data.forEach((row, index) => {
                     if (row.join('').trim().length === 0) return; 
 
+                    // Không tính toán dòng có chứa chữ "Tổng cộng" hoặc các dòng tiêu đề phụ bên dưới
+                    const rowText = row.join(' ').toLowerCase();
+                    const isTotalRow = rowText.includes('tổng thu') || rowText.includes('tổng chi');
+
+                    if (tableId === 'table-finance' && index > 0 && !isTotalRow) {
+                        // Cột Thu: index 1 | Cột Chi: index 4
+                        totalIn += parseMoney(row[1]);
+                        totalOut += parseMoney(row[4]);
+                    }
+
                     const tr = document.createElement('tr');
                     
                     if (tableId === 'table-players' && index > 0) {
@@ -136,11 +142,6 @@
                         else if (teamValue.includes('ĐỘI B')) tr.classList.add('team-row-b');
                         else if (teamValue.includes('ĐỘI C')) tr.classList.add('team-row-c');
                         else if (teamValue.includes('ĐỘI D')) tr.classList.add('team-row-d');
-                    }
-
-                    if (tableId === 'table-finance' && index > 0) {
-                        totalIn += parseMoney(row[1]);
-                        totalOut += parseMoney(row[4]);
                     }
 
                     row.forEach(cell => {
