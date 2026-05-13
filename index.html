@@ -4,22 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chăm team 2026</title>
-    <!-- THƯ VIỆN PAPAPARSE: Đặt ở đây để đảm bảo tải trước script xử lý -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <style>
-        :root { --primary: #2c3e50; --secondary: #27ae60; --light: #f4f7f6; --danger: #e74c3c; --info: #3498db; }
+        :root { --primary: #2c3e50; --secondary: #27ae60; --light: #f4f7f6; --danger: #e74c3c; --info: #3498db; --gold: #f1c40f; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--light); padding: 10px; margin: 0; }
         .container { max-width: 1000px; margin: auto; background: white; padding: 15px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); box-sizing: border-box; }
-        
         h1 { text-align: center; color: var(--primary); margin-bottom: 10px; font-size: 1.5rem; }
         .event-info { text-align: center; margin-bottom: 15px; padding: 15px; background: #eef7f2; border-radius: 8px; }
         .event-info p { margin: 5px 0; color: #34495e; font-weight: 500; font-size: 0.95rem; }
         .event-info strong { color: var(--secondary); }
-
         .source-link { text-align: center; margin-bottom: 10px; }
         .source-link a { color: #2980b9; text-decoration: none; font-weight: bold; font-size: 0.85rem; }
         .status { text-align: center; color: #666; font-style: italic; margin-bottom: 15px; font-size: 0.8rem; }
-
         .finance-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-top: 20px; }
         .card { padding: 15px; border-radius: 8px; text-align: center; color: white; }
         .card h3 { margin: 0; font-size: 0.9rem; opacity: 0.9; }
@@ -27,83 +23,65 @@
         .bg-total { background: var(--info); }
         .bg-spent { background: var(--danger); }
         .bg-remain { background: var(--secondary); }
-
         .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; margin-top: 15px; }
         table { width: 100%; border-collapse: collapse; min-width: 450px; }
         th, td { border: 1px solid #ddd; padding: 12px 8px; text-align: center; font-size: 0.9rem; }
         th { background: var(--secondary); color: white; white-space: nowrap; }
-        
         #table-standings tr:nth-child(even), #table-matches tr:nth-child(even), #table-finance tr:nth-child(even) { background-color: #f9f9f9; }
         .section-title { border-left: 5px solid var(--secondary); padding-left: 10px; margin-top: 40px; color: var(--primary); font-size: 1.2rem; }
-
+        .qualified { background-color: #e8f5e9 !important; font-weight: bold; color: #2e7d32; }
         .team-row-a { background-color: #e3f2fd !important; }
         .team-row-b { background-color: #fff3e0 !important; }
-        .team-row-c { background-color: #f3e5f5 !important; }
-        .team-row-d { background-color: #e8f5e9 !important; }
+        .badge { padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; color: white; }
+        .badge-win { background: var(--secondary); }
     </style>
 </head>
 <body>
 
 <div class="container">
     <h1>🏸 LIVE: Chăm team 2026</h1>
-    
     <div class="event-info">
-        <p>📅 Thời gian tổ chức: <strong>17/05/2026</strong></p>
-        <p>📍 Địa điểm: <strong>Hoàng Mai - Hà Nội</strong></p>
+        <p>📅 Thời gian: <strong>17/05/2026</strong> | 📍 Địa điểm: <strong>Hoàng Mai - Hà Nội</strong></p>
     </div>
-
     <div class="source-link">
-        <a target="_blank" href="https://docs.google.com/spreadsheets/d/110HWrsepHGWW-wI6sBQspMYKgaqRApB_QKAVV2m5-BY/edit?usp=sharing">
-            🔗 Xem dữ liệu gốc tại Google Sheets
-        </a>
+        <a target="_blank" href="https://docs.google.com/spreadsheets/d/110HWrsepHGWW-wI6sBQspMYKgaqRApB_QKAVV2m5-BY/edit?usp=sharing">🔗 Dữ liệu gốc Google Sheets</a>
     </div>
-
     <p class="status" id="load-status">Đang nạp dữ liệu...</p>
 
-    <h2 class="section-title">Bảng Xếp Hạng</h2>
+    <h2 class="section-title">Bảng Xếp Hạng (Thắng 1đ - Thua 0đ)</h2>
     <div class="table-responsive">
-        <table id="table-standings"><thead></thead><tbody></tbody></table>
+        <table id="table-standings">
+            <thead>
+                <tr><th>Bảng</th><th>Hạng</th><th>Đội</th><th>Trận</th><th>Thắng</th><th>Thua</th><th>Điểm</th><th>Trạng thái</th></tr>
+            </thead>
+            <tbody></tbody>
+        </table>
     </div>
 
-    <h2 class="section-title">Lịch Thi Đấu</h2>
-    <div class="table-responsive">
-        <table id="table-matches"><thead></thead><tbody></tbody></table>
-    </div>
+    <h2 class="section-title">Lịch Thi Đấu & Kết Quả</h2>
+    <div class="table-responsive"><table id="table-matches"><thead></thead><tbody></tbody></table></div>
 
-    <h2 class="section-title">Danh Sách Vận Động Viên</h2>
-    <div class="table-responsive">
-        <table id="table-players"><thead></thead><tbody></tbody></table>
-    </div>
+    <h2 class="section-title">Danh Sách VĐV</h2>
+    <div class="table-responsive"><table id="table-players"><thead></thead><tbody></tbody></table></div>
 
-    <!-- PHẦN THU CHI DƯỚI CÙNG -->
     <h2 class="section-title">Quản Lý Thu Chi</h2>
     <div class="finance-summary">
         <div class="card bg-total"><h3>Tổng Thu</h3><p id="total-in">0đ</p></div>
         <div class="card bg-spent"><h3>Tổng Chi</h3><p id="total-out">0đ</p></div>
         <div class="card bg-remain"><h3>Còn Lại</h3><p id="balance">0đ</p></div>
     </div>
-    <div class="table-responsive">
-        <table id="table-finance"><thead></thead><tbody></tbody></table>
-    </div>
+    <div class="table-responsive"><table id="table-finance"><thead></thead><tbody></tbody></table></div>
 </div>
 
 <script>
     const sheetLinks = {
-        standings: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRkUoFtqaOaU8pLTLpo6FAd4rdqgH0JPg0tpqP0C8MeiQ9cfD6s9R4-CgDPjbwTicqrGWNzXi25u1dI/pub?gid=0&single=true&output=csv",
         matches: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRkUoFtqaOaU8pLTLpo6FAd4rdqgH0JPg0tpqP0C8MeiQ9cfD6s9R4-CgDPjbwTicqrGWNzXi25u1dI/pub?gid=1302524989&single=true&output=csv",
         players: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRkUoFtqaOaU8pLTLpo6FAd4rdqgH0JPg0tpqP0C8MeiQ9cfD6s9R4-CgDPjbwTicqrGWNzXi25u1dI/pub?gid=315332621&single=true&output=csv",
         finance: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRkUoFtqaOaU8pLTLpo6FAd4rdqgH0JPg0tpqP0C8MeiQ9cfD6s9R4-CgDPjbwTicqrGWNzXi25u1dI/pub?gid=405520871&single=true&output=csv"
     };
 
-    function formatCurrency(val) {
-        return val.toLocaleString('vi-VN') + "đ";
-    }
-
-    function parseMoney(val) {
-        if (!val) return 0;
-        let cleaned = val.toString().replace(/[^0-9]/g, "");
-        return parseInt(cleaned) || 0;
-    }
+    function parseMoney(val) { return parseInt(val?.toString().replace(/[^0-9]/g, "")) || 0; }
+    function formatCurrency(val) { return val.toLocaleString('vi-VN') + "đ"; }
 
     function loadSheetData(url, tableId) {
         Papa.parse(url, {
@@ -113,55 +91,46 @@
                 const data = results.data;
                 const table = document.getElementById(tableId);
                 if (!table) return;
-                
                 const thead = table.querySelector('thead');
                 const tbody = table.querySelector('tbody');
-                thead.innerHTML = ""; tbody.innerHTML = "";
+                
+                if (tableId !== 'table-standings') {
+                    thead.innerHTML = ""; tbody.innerHTML = "";
+                }
 
                 let totalIn = 0, totalOut = 0;
-                let colInIndex = 1; 
-                let colOutIndex = 7; 
+                let colInIndex = 1, colOutIndex = 7;
+                let matchResults = [];
 
                 data.forEach((row, index) => {
                     if (row.join('').trim().length === 0) return;
 
-                    // Xác định cột "Số tiền" ở tiêu đề
-                    if (index === 0 && tableId === 'table-finance') {
-                        row.forEach((cell, i) => {
-                            let text = cell.toLowerCase().trim();
-                            if (text === "số tiền") {
-                                if (i < 4) colInIndex = i; 
-                                else colOutIndex = i;     
-                            }
+                    if (tableId === 'table-finance') {
+                        if (index === 0) {
+                            row.forEach((cell, i) => { if (cell.toLowerCase().trim() === "số tiền") i < 4 ? colInIndex = i : colOutIndex = i; });
+                        } else if (!row.join(' ').toLowerCase().includes('tổng')) {
+                            totalIn += parseMoney(row[colInIndex]);
+                            totalOut += parseMoney(row[colOutIndex]);
+                        }
+                    }
+
+                    // Thu thập dữ liệu trận đấu để tính điểm
+                    if (tableId === 'table-matches' && index > 0) {
+                        matchResults.push({ group: row[0], t1: row[1], score: row[2], t2: row[3] });
+                    }
+
+                    if (tableId !== 'table-standings') {
+                        const tr = document.createElement('tr');
+                        row.forEach(cell => {
+                            const el = (index === 0) ? document.createElement('th') : document.createElement('td');
+                            el.textContent = cell;
+                            tr.appendChild(el);
                         });
+                        (index === 0) ? thead.appendChild(tr) : tbody.appendChild(tr);
                     }
-
-                    const rowText = row.join(' ').toLowerCase();
-                    const isTotalRow = rowText.includes('tổng thu') || rowText.includes('tổng chi');
-
-                    // Chỉ cộng dồn nếu không phải dòng tổng cộng của chính file Sheet
-                    if (tableId === 'table-finance' && index > 0 && !isTotalRow) {
-                        totalIn += parseMoney(row[colInIndex]);
-                        totalOut += parseMoney(row[colOutIndex]);
-                    }
-
-                    const tr = document.createElement('tr');
-                    if (tableId === 'table-players' && index > 0) {
-                        const teamValue = row.join(' ').toUpperCase();
-                        if (teamValue.includes('ĐỘI A')) tr.classList.add('team-row-a');
-                        else if (teamValue.includes('ĐỘI B')) tr.classList.add('team-row-b');
-                        else if (teamValue.includes('ĐỘI C')) tr.classList.add('team-row-c');
-                        else if (teamValue.includes('ĐỘI D')) tr.classList.add('team-row-d');
-                    }
-
-                    row.forEach(cell => {
-                        const el = (index === 0) ? document.createElement('th') : document.createElement('td');
-                        el.textContent = cell;
-                        tr.appendChild(el);
-                    });
-                    (index === 0) ? thead.appendChild(tr) : tbody.appendChild(tr);
                 });
 
+                if (tableId === 'table-matches') processStandings(matchResults);
                 if (tableId === 'table-finance') {
                     document.getElementById('total-in').textContent = formatCurrency(totalIn);
                     document.getElementById('total-out').textContent = formatCurrency(totalOut);
@@ -172,20 +141,39 @@
         });
     }
 
-    // Cơ chế khởi động an toàn để tránh lỗi "Papa is not defined"
+    function processStandings(matches) {
+        let stats = {};
+        matches.forEach(m => {
+            if (!m.score || !m.score.includes('-')) return;
+            [m.t1, m.t2].forEach(t => { if (!stats[t]) stats[t] = { name: t, group: m.group, p: 0, w: 0, l: 0, pts: 0 }; });
+            const s = m.score.split('-').map(x => parseInt(x.trim()));
+            stats[m.t1].p++; stats[m.t2].p++;
+            if (s[0] > s[1]) { stats[m.t1].w++; stats[m.t1].pts += 1; stats[m.t2].l++; }
+            else if (s[1] > s[0]) { stats[m.t2].w++; stats[m.t2].pts += 1; stats[m.t1].l++; }
+        });
+
+        const sorted = Object.values(stats).sort((a, b) => a.group.localeCompare(b.group) || b.pts - a.pts);
+        const tbody = document.querySelector('#table-standings tbody');
+        tbody.innerHTML = "";
+        
+        let currentGroup = "", rank = 0;
+        sorted.forEach(s => {
+            if (s.group !== currentGroup) { currentGroup = s.group; rank = 1; } else { rank++; }
+            const tr = document.createElement('tr');
+            if (rank <= 2) tr.classList.add('qualified');
+            tr.innerHTML = `<td>${s.group}</td><td>${rank}</td><td>${s.name}</td><td>${s.p}</td><td>${s.w}</td><td>${s.l}</td><td>${s.pts}</td>
+                            <td>${rank <= 2 ? '🔥 Vào Bán Kết' : '-'}</td>`;
+            tbody.appendChild(tr);
+        });
+    }
+
     function init() {
-        if (typeof Papa === 'undefined') {
-            setTimeout(init, 300); // Thử lại sau 0.3s nếu thư viện chưa tải xong
-            return;
-        }
-        loadSheetData(sheetLinks.standings, 'table-standings');
+        if (typeof Papa === 'undefined') { setTimeout(init, 300); return; }
         loadSheetData(sheetLinks.matches, 'table-matches');
         loadSheetData(sheetLinks.players, 'table-players');
         loadSheetData(sheetLinks.finance, 'table-finance');
     }
-
     window.onload = init;
 </script>
-
 </body>
 </html>
