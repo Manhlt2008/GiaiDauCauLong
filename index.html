@@ -25,7 +25,8 @@
         .finance-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-top: 15px; }
         .card { padding: 15px; border-radius: 8px; text-align: center; color: white; }
         .bg-total { background: var(--info); } .bg-spent { background: var(--danger); } .bg-remain { background: var(--secondary); }
-        .rules-list { padding: 15px; background: #fffde7; border-radius: 8px; border: 1px solid #fff59d; margin-bottom: 20px; }
+        .rules-content { padding: 15px; background: #fffde7; border-radius: 8px; border: 1px solid #fff59d; margin-bottom: 20px; font-size: 0.95rem; line-height: 1.6; }
+        .rules-content table { min-width: auto; background: white; }
     </style>
 </head>
 <body>
@@ -37,8 +38,8 @@
         <p class="status" id="load-status">Đang nạp dữ liệu...</p>
     </div>
     
-	<!-- BẢNG XẾP HẠNG (Tự động tính) -->
-    <h2 class="section-title no-collapse">Bảng Xếp Hạng Lâm Thời</h2>
+    <!-- BẢNG XẾP HẠNG -->
+    <h2 class="section-title no-collapse">Bảng Xếp Hạng Hiện Tại</h2>
     <div class="collapsible-content">
         <div class="table-responsive">
             <table id="table-standings">
@@ -47,14 +48,14 @@
             </table>
         </div>
     </div>
-	
+    
     <!-- LỊCH THI ĐẤU -->
     <h2 class="section-title" onclick="toggleSection(this)">Lịch Thi Đấu & Kết Quả</h2>
     <div class="collapsible-content">
         <div class="table-responsive"><table id="table-matches"><thead></thead><tbody></tbody></table></div>
     </div>
-	
-	<!-- DANH SÁCH VẬN ĐỘNG VIÊN -->
+    
+    <!-- DANH SÁCH VẬN ĐỘNG VIÊN -->
     <h2 class="section-title" onclick="toggleSection(this)">Danh Sách Vận Động Viên</h2>
     <div class="collapsible-content">
         <div class="table-responsive"><table id="table-athletes"><thead></thead><tbody></tbody></table></div>
@@ -74,22 +75,18 @@
     <!-- ĐIỀU LỆ -->
     <h2 class="section-title" onclick="toggleSection(this)">Điều Lệ Giải Đấu</h2>
     <div class="collapsible-content">
-        <div class="rules-list">
-            <ul>
-                <li><b>Vòng bảng:</b> Thi đấu vòng tròn tính điểm. Thắng được 1 điểm, Thua 0 điểm.</li>
-                <li><b>Xếp hạng:</b> Tính theo Điểm > Hiệu số set > Đối đầu trực tiếp.</li>
-                <li><b>BK & CK:</b> Nhất bảng A gặp Nhì bảng B và ngược lại.</li>
-                <li><b>Trọng tài:</b> Các đội tự giác bắt bóng trên tinh thần giao lưu, trung thực.</li>
-            </ul>
+        <div id="rules-container" class="rules-content">
+            Đang tải điều lệ...
         </div>
     </div>
 </div>
 
 <script>
     const sheetLinks = {
-        athletes: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRkUoFtqaOaU8pLTLpo6FAd4rdqgH0JPg0tpqP0C8MeiQ9cfD6s9R4-CgDPjbwTicqrGWNzXi25u1dI/pub?gid=0&single=true&output=csv",
+        athletes: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRkUoFtqaOaU8pLTLpo6FAd4rdqgH0JPg0tpqP0C8MeiQ9cfD6s9R4-CgDPjbwTicqrGWNzXi25u1dI/pub?gid=315332621&single=true&output=csv",
         matches: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRkUoFtqaOaU8pLTLpo6FAd4rdqgH0JPg0tpqP0C8MeiQ9cfD6s9R4-CgDPjbwTicqrGWNzXi25u1dI/pub?gid=1302524989&single=true&output=csv",
-        finance: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRkUoFtqaOaU8pLTLpo6FAd4rdqgH0JPg0tpqP0C8MeiQ9cfD6s9R4-CgDPjbwTicqrGWNzXi25u1dI/pub?gid=405520871&single=true&output=csv"
+        finance: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRkUoFtqaOaU8pLTLpo6FAd4rdqgH0JPg0tpqP0C8MeiQ9cfD6s9R4-CgDPjbwTicqrGWNzXi25u1dI/pub?gid=405520871&single=true&output=csv",
+        rules: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRkUoFtqaOaU8pLTLpo6FAd4rdqgH0JPg0tpqP0C8MeiQ9cfD6s9R4-CgDPjbwTicqrGWNzXi25u1dI/pub?gid=1907496499&single=true&output=csv"
     };
 
     let loadingCount = 0;
@@ -106,13 +103,36 @@
         loadSheetData(sheetLinks.athletes, 'table-athletes');
         loadSheetData(sheetLinks.matches, 'table-matches');
         loadSheetData(sheetLinks.finance, 'table-finance');
+        loadRulesData(sheetLinks.rules);
     }
 
     function checkAllLoaded() {
         loadingCount++;
-        if (loadingCount >= 3) {
+        if (loadingCount >= 4) {
             document.getElementById('load-status').textContent = "Cập nhật lúc: " + new Date().toLocaleTimeString('vi-VN');
         }
+    }
+
+    // Hàm load Điều lệ riêng vì nó hiển thị dạng text/list thay vì bảng thô
+    function loadRulesData(url) {
+        Papa.parse(url + "&t=" + new Date().getTime(), {
+            download: true, header: false,
+            complete: function(results) {
+                const data = results.data;
+                const container = document.getElementById('rules-container');
+                container.innerHTML = "";
+                const ul = document.createElement('ul');
+                data.forEach(row => {
+                    if (row[0] && row[0].trim() !== "") {
+                        const li = document.createElement('li');
+                        li.innerHTML = row[0]; // Cho phép format HTML nếu có trong cell
+                        ul.appendChild(li);
+                    }
+                });
+                container.appendChild(ul);
+                checkAllLoaded();
+            }
+        });
     }
 
     function loadSheetData(url, targetId) {
@@ -137,7 +157,6 @@
                         el.textContent = cell;
                         tr.appendChild(el);
 
-                        // Xử lý dữ liệu Thu Chi
                         if (targetId === 'table-finance') {
                             let cleanText = cell.toString().toLowerCase().trim();
                             if (cleanText === "tổng thu" && row[i+1]) finalIn = parseInt(row[i+1].toString().replace(/[^0-9]/g, "")) || 0;
@@ -146,7 +165,6 @@
                     });
                     index === 0 ? thead.appendChild(tr) : tbody.appendChild(tr);
 
-                    // Thu thập dữ liệu trận đấu để tính BXH
                     if (targetId === 'table-matches' && index > 0 && row[1] && row[3]) {
                         matchResults.push({ group: row[2], teams: row[1], score: row[3] });
                     }
