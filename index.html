@@ -24,7 +24,6 @@
         .qualified { background-color: #e8f5e9 !important; font-weight: bold; color: #2e7d32; }
         .section-title { border-left: 5px solid var(--secondary); padding-left: 10px; margin-top: 30px; color: var(--primary); font-size: 1.2rem; }
         
-        /* CSS cho phần Thu Chi */
         .finance-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-top: 15px; }
         .card { padding: 15px; border-radius: 8px; text-align: center; color: white; }
         .bg-total { background: var(--info); } .bg-spent { background: var(--danger); } .bg-remain { background: var(--secondary); }
@@ -40,7 +39,7 @@
         <p class="status" id="load-status">Đang nạp dữ liệu...</p>
     </div>
 
-    <h2 class="section-title">Bảng Xếp Hạng</h2>
+    <h2 class="section-title">Bảng Xếp Hạng (Tính theo cặp)</h2>
     <div class="table-responsive">
         <table id="table-standings">
             <thead>
@@ -52,6 +51,9 @@
 
     <h2 class="section-title">Lịch Thi Đấu & Kết Quả</h2>
     <div class="table-responsive"><table id="table-matches"><thead></thead><tbody></tbody></table></div>
+
+    <h2 class="section-title">Danh Sách Vận Động Viên</h2>
+    <div class="table-responsive"><table id="table-players"><thead></thead><tbody></tbody></table></div>
 
     <h2 class="section-title">Quản Lý Thu Chi</h2>
     <div class="finance-summary">
@@ -65,59 +67,48 @@
 <script>
     const sheetLinks = {
         matches: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRkUoFtqaOaU8pLTLpo6FAd4rdqgH0JPg0tpqP0C8MeiQ9cfD6s9R4-CgDPjbwTicqrGWNzXi25u1dI/pub?gid=1302524989&single=true&output=csv",
+        players: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRkUoFtqaOaU8pLTLpo6FAd4rdqgH0JPg0tpqP0C8MeiQ9cfD6s9R4-CgDPjbwTicqrGWNzXi25u1dI/pub?gid=315332621&single=true&output=csv",
         finance: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRkUoFtqaOaU8pLTLpo6FAd4rdqgH0JPg0tpqP0C8MeiQ9cfD6s9R4-CgDPjbwTicqrGWNzXi25u1dI/pub?gid=405520871&single=true&output=csv"
     };
 
     function refreshAllData() {
         document.getElementById('load-status').textContent = "Đang làm mới...";
         loadSheetData(sheetLinks.matches, 'table-matches');
+        loadSheetData(sheetLinks.players, 'table-players');
         loadSheetData(sheetLinks.finance, 'table-finance');
     }
 
     function loadSheetData(url, tableId) {
-        // Thêm tham số ngẫu nhiên để tránh trình duyệt cache dữ liệu cũ
         const cacheBuster = url + "&t=" + new Date().getTime();
-        
         Papa.parse(cacheBuster, {
-            download: true,
-            header: false,
+            download: true, header: false,
             complete: function(results) {
                 const data = results.data;
                 const table = document.getElementById(tableId);
                 if (!table) return;
-
                 const thead = table.querySelector('thead');
                 const tbody = table.querySelector('tbody');
                 if (tableId !== 'table-standings') { thead.innerHTML = ""; tbody.innerHTML = ""; }
 
                 let totalIn = 0, totalOut = 0;
                 let matchResults = [];
-
-                // Dò index cột cho Lịch thi đấu
                 let colGroup = 2, colTeams = 1, colScore = 3; 
-                
+
                 data.forEach((row, index) => {
                     if (row.join('').trim().length === 0) return;
-
                     if (index === 0) {
-                        // Vẽ Header cho bảng gốc
                         const tr = document.createElement('tr');
-                        row.forEach(cell => {
+                        row.forEach((cell, i) => {
                             const th = document.createElement('th');
                             th.textContent = cell;
                             tr.appendChild(th);
-                        });
-                        thead.appendChild(tr);
-                        
-                        // Tự động tìm cột dựa theo tên tiêu đề để tránh bị lệch do cột trống
-                        row.forEach((cell, i) => {
                             let txt = cell.toLowerCase().trim();
                             if (txt.includes("bảng")) colGroup = i;
                             if (txt.includes("đội")) colTeams = i;
                             if (txt.includes("tỷ số") || txt.includes("tỉ số")) colScore = i;
                         });
+                        thead.appendChild(tr);
                     } else {
-                        // Xử lý dữ liệu hàng
                         const tr = document.createElement('tr');
                         row.forEach(cell => {
                             const td = document.createElement('td');
@@ -126,18 +117,10 @@
                         });
                         tbody.appendChild(tr);
 
-                        // Lưu dữ liệu để tính BXH
                         if (tableId === 'table-matches') {
-                            matchResults.push({
-                                group: row[colGroup],
-                                teams: row[colTeams],
-                                score: row[colScore]
-                            });
+                            matchResults.push({ group: row[colGroup], teams: row[colTeams], score: row[colScore] });
                         }
-                        
-                        // Thu chi
                         if (tableId === 'table-finance') {
-                            // Giả định cột tiền Thu là index 1, Chi là index 7 dựa trên image trước đó
                             totalIn += parseInt(row[1]?.toString().replace(/[^0-9]/g, "")) || 0;
                             totalOut += parseInt(row[7]?.toString().replace(/[^0-9]/g, "")) || 0;
                         }
@@ -150,67 +133,48 @@
                     document.getElementById('total-out').textContent = totalOut.toLocaleString() + "đ";
                     document.getElementById('balance').textContent = (totalIn - totalOut).toLocaleString() + "đ";
                 }
-                document.getElementById('load-status').textContent = "Cập nhật lúc: " + new Date().toLocaleTimeString();
             }
         });
     }
 
     function updateStandings(matches) {
         let stats = {};
-
         matches.forEach(m => {
-            if (!m.score || !m.score.includes('-')) return;
+            if (!m.score || !m.score.includes('-') || m.score.trim() === "0-0") return;
             
-            // Tách tên 2 đội (ví dụ: "A vs B")
-            let teamNames = m.teams.split(/vs|Và|-/i).map(t => t.trim());
-            if (teamNames.length < 2) return;
+            // Tách đúng cặp đấu dựa trên " vs "
+            let teams = m.teams.split(/ vs /i).map(t => t.trim());
+            if (teams.length < 2) return;
 
-            // Tách tỷ số
             let scores = m.score.split('-').map(s => parseInt(s.trim()));
             if (isNaN(scores[0]) || isNaN(scores[1])) return;
 
-            // Khởi tạo stats nếu chưa có
-            teamNames.forEach(name => {
+            teams.forEach(name => {
                 if (!stats[name]) stats[name] = { name: name, group: m.group, played: 0, win: 0, lose: 0, pts: 0 };
             });
 
-            // Cộng trận đã chơi
-            stats[teamNames[0]].played++;
-            stats[teamNames[1]].played++;
+            stats[teams[0]].played++; stats[teams[1]].played++;
 
-            // Tính thắng thua (Luật Thắng 1đ, Thua 0đ)
+            // Logic tính điểm: so sánh score[0] (Đội 1) và score[1] (Đội 2)
             if (scores[0] > scores[1]) {
-                stats[teamNames[0]].win++; stats[teamNames[0]].pts++;
-                stats[teamNames[1]].lose++;
+                stats[teams[0]].win++; stats[teams[0]].pts++;
+                stats[teams[1]].lose++;
             } else if (scores[1] > scores[0]) {
-                stats[teamNames[1]].win++; stats[teamNames[1]].pts++;
-                stats[teamNames[0]].lose++;
+                stats[teams[1]].win++; stats[teams[1]].pts++;
+                stats[teams[0]].lose++;
             }
         });
 
-        // Sắp xếp theo Bảng -> Điểm cao đứng trước
         const sorted = Object.values(stats).sort((a, b) => a.group.localeCompare(b.group) || b.pts - a.pts);
-        
         const bxhBody = document.querySelector('#table-standings tbody');
         bxhBody.innerHTML = "";
         
         let currentGroup = "", rank = 0;
         sorted.forEach(s => {
             if (s.group !== currentGroup) { currentGroup = s.group; rank = 1; } else { rank++; }
-            
             const tr = document.createElement('tr');
-            if (rank <= 2) tr.classList.add('qualified'); // Highlight 2 đội đầu
-            
-            tr.innerHTML = `
-                <td>${s.group}</td>
-                <td>${rank}</td>
-                <td>${s.name}</td>
-                <td>${s.played}</td>
-                <td>${s.win}</td>
-                <td>${s.lose}</td>
-                <td>${s.pts}</td>
-                <td>${rank <= 2 ? '🔥 Vào BK' : '-'}</td>
-            `;
+            if (rank <= 2) tr.classList.add('qualified');
+            tr.innerHTML = `<td>${s.group}</td><td>${rank}</td><td>${s.name}</td><td>${s.played}</td><td>${s.win}</td><td>${s.lose}</td><td>${s.pts}</td><td>${rank <= 2 ? '🔥 Vào BK' : '-'}</td>`;
             bxhBody.appendChild(tr);
         });
     }
