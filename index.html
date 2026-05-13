@@ -15,18 +15,35 @@
         .btn-refresh { background: var(--secondary); color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; transition: 0.3s; }
         .btn-refresh:hover { background: #219150; transform: scale(1.05); }
 
-        .status { text-align: center; color: #666; font-style: italic; margin-bottom: 15px; font-size: 0.8rem; }
+        .status { text-align: center; color: #666; font-style: italic; margin-bottom: 15px; font-size: 0.8rem; height: 1em; }
         .table-responsive { width: 100%; overflow-x: auto; margin-top: 15px; }
         table { width: 100%; border-collapse: collapse; min-width: 500px; }
         th, td { border: 1px solid #ddd; padding: 12px 8px; text-align: center; font-size: 0.9rem; }
         th { background: var(--secondary); color: white; }
         
         .qualified { background-color: #e8f5e9 !important; font-weight: bold; color: #2e7d32; }
-        .section-title { border-left: 5px solid var(--secondary); padding-left: 10px; margin-top: 30px; color: var(--primary); font-size: 1.2rem; }
+        
+        .section-title { 
+            border-left: 5px solid var(--secondary); 
+            padding: 10px; 
+            margin-top: 20px; 
+            color: var(--primary); 
+            font-size: 1.2rem; 
+            background: #f8f9fa;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .section-title:not(.no-collapse)::after { content: '▾'; font-size: 0.8rem; transition: 0.3s; }
+        .section-title.collapsed::after { content: '▸'; }
         
         .finance-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-top: 15px; }
         .card { padding: 15px; border-radius: 8px; text-align: center; color: white; }
         .bg-total { background: var(--info); } .bg-spent { background: var(--danger); } .bg-remain { background: var(--secondary); }
+
+        #rules-content { padding: 15px; line-height: 1.6; color: #444; background: #fffdf0; border-radius: 5px; margin-top: 10px; }
+        .rule-item { margin-bottom: 8px; border-bottom: 1px dashed #ddd; padding-bottom: 5px; }
     </style>
 </head>
 <body>
@@ -39,100 +56,139 @@
         <p class="status" id="load-status">Đang nạp dữ liệu...</p>
     </div>
 
-    <h2 class="section-title">Bảng Xếp Hạng (Tính theo cặp)</h2>
-    <div class="table-responsive">
-        <table id="table-standings">
-            <thead>
-                <tr><th>Bảng</th><th>Hạng</th><th>Đội</th><th>Trận</th><th>Thắng</th><th>Thua</th><th>Điểm</th><th>Trạng thái</th></tr>
-            </thead>
-            <tbody></tbody>
-        </table>
+    <h2 class="section-title no-collapse">Bảng Xếp Hạng (Tính theo cặp)</h2>
+    <div class="collapsible-content">
+        <div class="table-responsive">
+            <table id="table-standings">
+                <thead>
+                    <tr><th>Bảng</th><th>Hạng</th><th>Đội</th><th>Trận</th><th>Thắng</th><th>Thua</th><th>Điểm</th><th>Trạng thái</th></tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
     </div>
 
-    <h2 class="section-title">Lịch Thi Đấu & Kết Quả</h2>
-    <div class="table-responsive"><table id="table-matches"><thead></thead><tbody></tbody></table></div>
-
-    <h2 class="section-title">Danh Sách Vận Động Viên</h2>
-    <div class="table-responsive"><table id="table-players"><thead></thead><tbody></tbody></table></div>
-
-    <h2 class="section-title">Quản Lý Thu Chi</h2>
-    <div class="finance-summary">
-        <div class="card bg-total"><h3>Tổng Thu</h3><p id="total-in">0đ</p></div>
-        <div class="card bg-spent"><h3>Tổng Chi</h3><p id="total-out">0đ</p></div>
-        <div class="card bg-remain"><h3>Còn Lại</h3><p id="balance">0đ</p></div>
+    <h2 class="section-title" onclick="toggleSection(this)">Lịch Thi Đấu & Kết Quả</h2>
+    <div class="collapsible-content">
+        <div class="table-responsive"><table id="table-matches"><thead></thead><tbody></tbody></table></div>
     </div>
-    <div class="table-responsive"><table id="table-finance"><thead></thead><tbody></tbody></table></div>
+
+    <h2 class="section-title" onclick="toggleSection(this)">Danh Sách Vận Động Viên</h2>
+    <div class="collapsible-content">
+        <div class="table-responsive"><table id="table-players"><thead></thead><tbody></tbody></table></div>
+    </div>
+
+    <h2 class="section-title" onclick="toggleSection(this)">Quản Lý Thu Chi</h2>
+    <div class="collapsible-content">
+        <div class="finance-summary">
+            <div class="card bg-total"><h3>Tổng Thu</h3><p id="total-in">0đ</p></div>
+            <div class="card bg-spent"><h3>Tổng Chi</h3><p id="total-out">0đ</p></div>
+            <div class="card bg-remain"><h3>Còn Lại</h3><p id="balance">0đ</p></div>
+        </div>
+        <div class="table-responsive"><table id="table-finance"><thead></thead><tbody></tbody></table></div>
+    </div>
+
+    <h2 class="section-title" onclick="toggleSection(this)">Điều Lệ Giải Đấu</h2>
+    <div class="collapsible-content">
+        <div id="rules-content">Đang tải điều lệ...</div>
+    </div>
 </div>
 
 <script>
     const sheetLinks = {
         matches: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRkUoFtqaOaU8pLTLpo6FAd4rdqgH0JPg0tpqP0C8MeiQ9cfD6s9R4-CgDPjbwTicqrGWNzXi25u1dI/pub?gid=1302524989&single=true&output=csv",
         players: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRkUoFtqaOaU8pLTLpo6FAd4rdqgH0JPg0tpqP0C8MeiQ9cfD6s9R4-CgDPjbwTicqrGWNzXi25u1dI/pub?gid=315332621&single=true&output=csv",
-        finance: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRkUoFtqaOaU8pLTLpo6FAd4rdqgH0JPg0tpqP0C8MeiQ9cfD6s9R4-CgDPjbwTicqrGWNzXi25u1dI/pub?gid=405520871&single=true&output=csv"
+        finance: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRkUoFtqaOaU8pLTLpo6FAd4rdqgH0JPg0tpqP0C8MeiQ9cfD6s9R4-CgDPjbwTicqrGWNzXi25u1dI/pub?gid=405520871&single=true&output=csv",
+        rules: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRkUoFtqaOaU8pLTLpo6FAd4rdqgH0JPg0tpqP0C8MeiQ9cfD6s9R4-CgDPjbwTicqrGWNzXi25u1dI/pub?gid=1907496499&single=true&output=csv"
     };
 
+    let loadingCount = 0;
+
+    function toggleSection(el) {
+        el.classList.toggle('collapsed');
+        const content = el.nextElementSibling;
+        content.style.display = (content.style.display === 'none') ? 'block' : 'none';
+    }
+
     function refreshAllData() {
+        loadingCount = 0;
         document.getElementById('load-status').textContent = "Đang làm mới...";
+        
         loadSheetData(sheetLinks.matches, 'table-matches');
         loadSheetData(sheetLinks.players, 'table-players');
         loadSheetData(sheetLinks.finance, 'table-finance');
+        loadSheetData(sheetLinks.rules, 'rules-content');
     }
 
-    function loadSheetData(url, tableId) {
+    function checkAllLoaded() {
+        loadingCount++;
+        if (loadingCount >= 4) {
+            const now = new Date();
+            document.getElementById('load-status').textContent = "Cập nhật lúc: " + now.toLocaleTimeString('vi-VN');
+        }
+    }
+
+    function loadSheetData(url, targetId) {
         const cacheBuster = url + "&t=" + new Date().getTime();
         Papa.parse(cacheBuster, {
             download: true, header: false,
             complete: function(results) {
                 const data = results.data;
-                const table = document.getElementById(tableId);
-                if (!table) return;
-                const thead = table.querySelector('thead');
-                const tbody = table.querySelector('tbody');
-                if (tableId !== 'table-standings') { thead.innerHTML = ""; tbody.innerHTML = ""; }
+                const container = document.getElementById(targetId);
+                if (!container) { checkAllLoaded(); return; }
 
-                let totalIn = 0, totalOut = 0;
-                let matchResults = [];
-                let colGroup = 2, colTeams = 1, colScore = 3; 
+                if (targetId === 'rules-content') {
+                    container.innerHTML = data.map(row => row[0] ? `<div class="rule-item">${row[0]}</div>` : '').join('');
+                } else {
+                    const thead = container.querySelector('thead');
+                    const tbody = container.querySelector('tbody');
+                    if (targetId !== 'table-standings') { thead.innerHTML = ""; tbody.innerHTML = ""; }
 
-                data.forEach((row, index) => {
-                    if (row.join('').trim().length === 0) return;
-                    if (index === 0) {
-                        const tr = document.createElement('tr');
-                        row.forEach((cell, i) => {
-                            const th = document.createElement('th');
-                            th.textContent = cell;
-                            tr.appendChild(th);
-                            let txt = cell.toLowerCase().trim();
-                            if (txt.includes("bảng")) colGroup = i;
-                            if (txt.includes("đội")) colTeams = i;
-                            if (txt.includes("tỷ số") || txt.includes("tỉ số")) colScore = i;
-                        });
-                        thead.appendChild(tr);
-                    } else {
-                        const tr = document.createElement('tr');
-                        row.forEach(cell => {
-                            const td = document.createElement('td');
-                            td.textContent = cell;
-                            tr.appendChild(td);
-                        });
-                        tbody.appendChild(tr);
+                    let totalIn = 0, totalOut = 0;
+                    let matchResults = [];
+                    let colGroup = 2, colTeams = 1, colScore = 3; 
 
-                        if (tableId === 'table-matches') {
-                            matchResults.push({ group: row[colGroup], teams: row[colTeams], score: row[colScore] });
+                    data.forEach((row, index) => {
+                        if (row.join('').trim().length === 0) return;
+                        if (index === 0) {
+                            const tr = document.createElement('tr');
+                            row.forEach((cell, i) => {
+                                const th = document.createElement('th');
+                                th.textContent = cell;
+                                tr.appendChild(th);
+                                let txt = cell.toLowerCase().trim();
+                                if (txt.includes("bảng")) colGroup = i;
+                                if (txt.includes("đội")) colTeams = i;
+                                if (txt.includes("tỷ số") || txt.includes("tỉ số")) colScore = i;
+                            });
+                            thead.appendChild(tr);
+                        } else {
+                            const tr = document.createElement('tr');
+                            row.forEach(cell => {
+                                const td = document.createElement('td');
+                                td.textContent = cell;
+                                tr.appendChild(td);
+                            });
+                            tbody.appendChild(tr);
+
+                            if (targetId === 'table-matches') {
+                                matchResults.push({ group: row[colGroup], teams: row[colTeams], score: row[colScore] });
+                            }
+                            if (targetId === 'table-finance') {
+                                totalIn += parseInt(row[1]?.toString().replace(/[^0-9]/g, "")) || 0;
+                                totalOut += parseInt(row[7]?.toString().replace(/[^0-9]/g, "")) || 0;
+                            }
                         }
-                        if (tableId === 'table-finance') {
-                            totalIn += parseInt(row[1]?.toString().replace(/[^0-9]/g, "")) || 0;
-                            totalOut += parseInt(row[7]?.toString().replace(/[^0-9]/g, "")) || 0;
-                        }
+                    });
+
+                    if (targetId === 'table-matches') updateStandings(matchResults);
+                    if (targetId === 'table-finance') {
+                        document.getElementById('total-in').textContent = totalIn.toLocaleString() + "đ";
+                        document.getElementById('total-out').textContent = totalOut.toLocaleString() + "đ";
+                        document.getElementById('balance').textContent = (totalIn - totalOut).toLocaleString() + "đ";
                     }
-                });
-
-                if (tableId === 'table-matches') updateStandings(matchResults);
-                if (tableId === 'table-finance') {
-                    document.getElementById('total-in').textContent = totalIn.toLocaleString() + "đ";
-                    document.getElementById('total-out').textContent = totalOut.toLocaleString() + "đ";
-                    document.getElementById('balance').textContent = (totalIn - totalOut).toLocaleString() + "đ";
                 }
+                checkAllLoaded();
             }
         });
     }
@@ -141,21 +197,15 @@
         let stats = {};
         matches.forEach(m => {
             if (!m.score || !m.score.includes('-') || m.score.trim() === "0-0") return;
-            
-            // Tách đúng cặp đấu dựa trên " vs "
             let teams = m.teams.split(/ vs /i).map(t => t.trim());
             if (teams.length < 2) return;
-
             let scores = m.score.split('-').map(s => parseInt(s.trim()));
-            if (isNaN(scores[0]) || isNaN(scores[1])) return;
-
+            
             teams.forEach(name => {
                 if (!stats[name]) stats[name] = { name: name, group: m.group, played: 0, win: 0, lose: 0, pts: 0 };
             });
 
             stats[teams[0]].played++; stats[teams[1]].played++;
-
-            // Logic tính điểm: so sánh score[0] (Đội 1) và score[1] (Đội 2)
             if (scores[0] > scores[1]) {
                 stats[teams[0]].win++; stats[teams[0]].pts++;
                 stats[teams[1]].lose++;
@@ -168,7 +218,6 @@
         const sorted = Object.values(stats).sort((a, b) => a.group.localeCompare(b.group) || b.pts - a.pts);
         const bxhBody = document.querySelector('#table-standings tbody');
         bxhBody.innerHTML = "";
-        
         let currentGroup = "", rank = 0;
         sorted.forEach(s => {
             if (s.group !== currentGroup) { currentGroup = s.group; rank = 1; } else { rank++; }
