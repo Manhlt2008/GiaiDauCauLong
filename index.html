@@ -15,7 +15,7 @@
         .btn-refresh:hover { background: #219150; transform: scale(1.05); }
         .status { text-align: center; color: #666; font-style: italic; margin-bottom: 15px; font-size: 0.8rem; height: 1em; }
         .table-responsive { width: 100%; overflow-x: auto; margin-top: 15px; }
-        table { width: 100%; border-collapse: collapse; min-width: 500px; }
+        table { width: 100%; border-collapse: collapse; min-width: 600px; }
         th, td { border: 1px solid #ddd; padding: 12px 8px; text-align: center; font-size: 0.9rem; }
         th { background: var(--secondary); color: white; }
         .qualified { background-color: #e8f5e9 !important; font-weight: bold; color: #2e7d32; }
@@ -25,6 +25,7 @@
         .finance-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-top: 15px; }
         .card { padding: 15px; border-radius: 8px; text-align: center; color: white; }
         .bg-total { background: var(--info); } .bg-spent { background: var(--danger); } .bg-remain { background: var(--secondary); }
+        .rules-list { padding: 15px; background: #fffde7; border-radius: 8px; border: 1px solid #fff59d; margin-bottom: 20px; }
     </style>
 </head>
 <body>
@@ -36,11 +37,30 @@
         <p class="status" id="load-status">Đang nạp dữ liệu...</p>
     </div>
 
-    <h2 class="section-title no-collapse">Bảng Xếp Hạng</h2>
+    <!-- DANH SÁCH VẬN ĐỘNG VIÊN -->
+    <h2 class="section-title" onclick="toggleSection(this)">Danh Sách Vận Động Viên</h2>
     <div class="collapsible-content">
-        <div class="table-responsive"><table id="table-standings"><thead><tr><th>Bảng</th><th>Hạng</th><th>Đội</th><th>Trận</th><th>Thắng</th><th>Thua</th><th>Điểm</th><th>Trạng thái</th></tr></thead><tbody></tbody></table></div>
+        <div class="table-responsive"><table id="table-athletes"><thead></thead><tbody></tbody></table></div>
     </div>
 
+    <!-- LỊCH THI ĐẤU -->
+    <h2 class="section-title" onclick="toggleSection(this)">Lịch Thi Đấu & Kết Quả</h2>
+    <div class="collapsible-content">
+        <div class="table-responsive"><table id="table-matches"><thead></thead><tbody></tbody></table></div>
+    </div>
+
+    <!-- BẢNG XẾP HẠNG (Tự động tính) -->
+    <h2 class="section-title no-collapse">Bảng Xếp Hạng Lâm Thời</h2>
+    <div class="collapsible-content">
+        <div class="table-responsive">
+            <table id="table-standings">
+                <thead><tr><th>Bảng</th><th>Hạng</th><th>Đội</th><th>Trận</th><th>Thắng</th><th>Thua</th><th>Điểm</th><th>Trạng thái</th></tr></thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- QUẢN LÝ THU CHI -->
     <h2 class="section-title" onclick="toggleSection(this)">Quản Lý Thu Chi</h2>
     <div class="collapsible-content">
         <div class="finance-summary">
@@ -50,10 +70,24 @@
         </div>
         <div class="table-responsive"><table id="table-finance"><thead></thead><tbody></tbody></table></div>
     </div>
+
+    <!-- ĐIỀU LỆ -->
+    <h2 class="section-title" onclick="toggleSection(this)">Điều Lệ Giải Đấu</h2>
+    <div class="collapsible-content">
+        <div class="rules-list">
+            <ul>
+                <li><b>Vòng bảng:</b> Thi đấu vòng tròn tính điểm. Thắng được 1 điểm, Thua 0 điểm.</li>
+                <li><b>Xếp hạng:</b> Tính theo Điểm > Hiệu số set > Đối đầu trực tiếp.</li>
+                <li><b>BK & CK:</b> Nhất bảng A gặp Nhì bảng B và ngược lại.</li>
+                <li><b>Trọng tài:</b> Các đội tự giác bắt bóng trên tinh thần giao lưu, trung thực.</li>
+            </ul>
+        </div>
+    </div>
 </div>
 
 <script>
     const sheetLinks = {
+        athletes: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRkUoFtqaOaU8pLTLpo6FAd4rdqgH0JPg0tpqP0C8MeiQ9cfD6s9R4-CgDPjbwTicqrGWNzXi25u1dI/pub?gid=0&single=true&output=csv",
         matches: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRkUoFtqaOaU8pLTLpo6FAd4rdqgH0JPg0tpqP0C8MeiQ9cfD6s9R4-CgDPjbwTicqrGWNzXi25u1dI/pub?gid=1302524989&single=true&output=csv",
         finance: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRkUoFtqaOaU8pLTLpo6FAd4rdqgH0JPg0tpqP0C8MeiQ9cfD6s9R4-CgDPjbwTicqrGWNzXi25u1dI/pub?gid=405520871&single=true&output=csv"
     };
@@ -69,13 +103,14 @@
     function refreshAllData() {
         loadingCount = 0;
         document.getElementById('load-status').textContent = "Đang làm mới...";
+        loadSheetData(sheetLinks.athletes, 'table-athletes');
         loadSheetData(sheetLinks.matches, 'table-matches');
         loadSheetData(sheetLinks.finance, 'table-finance');
     }
 
     function checkAllLoaded() {
         loadingCount++;
-        if (loadingCount >= 2) {
+        if (loadingCount >= 3) {
             document.getElementById('load-status').textContent = "Cập nhật lúc: " + new Date().toLocaleTimeString('vi-VN');
         }
     }
@@ -86,54 +121,44 @@
             download: true, header: false,
             complete: function(results) {
                 const data = results.data;
-                const container = document.getElementById(targetId);
-                
-                let finalIn = 0, finalOut = 0;
+                const table = document.getElementById(targetId);
+                table.innerHTML = "<thead></thead><tbody></tbody>";
+                const thead = table.querySelector('thead');
+                const tbody = table.querySelector('tbody');
+
                 let matchResults = [];
+                let finalIn = 0, finalOut = 0;
+
+                data.forEach((row, index) => {
+                    if (row.join('').trim().length === 0) return;
+                    const tr = document.createElement('tr');
+                    row.forEach((cell, i) => {
+                        const el = index === 0 ? document.createElement('th') : document.createElement('td');
+                        el.textContent = cell;
+                        tr.appendChild(el);
+
+                        // Xử lý dữ liệu Thu Chi
+                        if (targetId === 'table-finance') {
+                            let cleanText = cell.toString().toLowerCase().trim();
+                            if (cleanText === "tổng thu" && row[i+1]) finalIn = parseInt(row[i+1].toString().replace(/[^0-9]/g, "")) || 0;
+                            if (cleanText === "tổng chi" && row[i+1]) finalOut = parseInt(row[i+1].toString().replace(/[^0-9]/g, "")) || 0;
+                        }
+                    });
+                    index === 0 ? thead.appendChild(tr) : tbody.appendChild(tr);
+
+                    // Thu thập dữ liệu trận đấu để tính BXH
+                    if (targetId === 'table-matches' && index > 0 && row[1] && row[3]) {
+                        matchResults.push({ group: row[2], teams: row[1], score: row[3] });
+                    }
+                });
 
                 if (targetId === 'table-finance') {
-                    const tbody = document.querySelector('#table-finance tbody') || document.createElement('tbody');
-                    const thead = document.querySelector('#table-finance thead') || document.createElement('thead');
-                    document.getElementById('table-finance').innerHTML = "";
-                    document.getElementById('table-finance').appendChild(thead);
-                    document.getElementById('table-finance').appendChild(tbody);
-
-                    data.forEach((row, index) => {
-                        if (row.join('').trim().length === 0) return;
-                        
-                        const tr = document.createElement('tr');
-                        row.forEach((cell, i) => {
-                            const el = index === 0 ? document.createElement('th') : document.createElement('td');
-                            el.textContent = cell;
-                            tr.appendChild(el);
-
-                            // Quét tìm từ khóa "Tổng thu" hoặc "Tổng chi" trong bất kỳ ô nào
-                            let cleanText = cell.toString().toLowerCase().trim();
-                            if (cleanText === "tổng thu" && row[i+1]) {
-                                finalIn = parseInt(row[i+1].toString().replace(/[^0-9]/g, "")) || 0;
-                            }
-                            if (cleanText === "tổng chi" && row[i+1]) {
-                                finalOut = parseInt(row[i+1].toString().replace(/[^0-9]/g, "")) || 0;
-                            }
-                        });
-                        index === 0 ? thead.appendChild(tr) : tbody.appendChild(tr);
-                    });
-
-                    // Cập nhật 3 thẻ ở trên
                     document.getElementById('total-in').textContent = finalIn.toLocaleString() + "đ";
                     document.getElementById('total-out').textContent = finalOut.toLocaleString() + "đ";
                     document.getElementById('balance').textContent = (finalIn - finalOut).toLocaleString() + "đ";
                 }
+                if (targetId === 'table-matches') updateStandings(matchResults);
                 
-                // Logic xử lý trận đấu để cập nhật BXH (giữ nguyên)
-                if (targetId === 'table-matches') {
-                    data.forEach((row, index) => {
-                        if (index > 0 && row[1] && row[3]) {
-                            matchResults.push({ group: row[2], teams: row[1], score: row[3] });
-                        }
-                    });
-                    updateStandings(matchResults);
-                }
                 checkAllLoaded();
             }
         });
