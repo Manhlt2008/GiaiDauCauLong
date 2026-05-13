@@ -145,20 +145,15 @@
 
                     let totalIn = 0, totalOut = 0;
                     let matchResults = [];
-                    let colGroup = 2, colTeams = 1, colScore = 3; 
 
                     data.forEach((row, index) => {
                         if (row.join('').trim().length === 0) return;
                         if (index === 0) {
                             const tr = document.createElement('tr');
-                            row.forEach((cell, i) => {
+                            row.forEach(cell => {
                                 const th = document.createElement('th');
                                 th.textContent = cell;
                                 tr.appendChild(th);
-                                let txt = cell.toLowerCase().trim();
-                                if (txt.includes("bảng")) colGroup = i;
-                                if (txt.includes("đội")) colTeams = i;
-                                if (txt.includes("tỷ số") || txt.includes("tỉ số")) colScore = i;
                             });
                             thead.appendChild(tr);
                         } else {
@@ -171,18 +166,23 @@
                             tbody.appendChild(tr);
 
                             if (targetId === 'table-matches') {
-                                matchResults.push({ group: row[colGroup], teams: row[colTeams], score: row[colScore] });
+                                // Mặc định cột Bảng=2, Đội=1, Tỷ số=3
+                                matchResults.push({ group: row[2], teams: row[1], score: row[3] });
                             }
+                            
                             if (targetId === 'table-finance') {
-                                let nameIn = (row[0] || "").toString().toLowerCase();
-                                let nameOut = (row[5] || "").toString().toLowerCase();
-                                
-                                // Logic: Chỉ cộng nếu ô tên không chứa chữ "tổng" (để tránh cộng trùng dòng tổng kết)
-                                if (row[1] && !nameIn.includes("tổng")) {
-                                    totalIn += parseInt(row[1].toString().replace(/[^0-9]/g, "")) || 0;
+                                // Theo ảnh: Cột 1 là Số tiền thu, Cột 7 là Số tiền chi
+                                // Chỉ lấy các dòng không phải là dòng "Tổng thu/chi" ở cuối
+                                let labelIn = (row[0] || "").toString().toLowerCase();
+                                let labelOut = (row[5] || "").toString().toLowerCase();
+
+                                if (row[1] && !labelIn.includes("tổng")) {
+                                    let val = parseInt(row[1].toString().replace(/[^0-9]/g, ""));
+                                    if (!isNaN(val)) totalIn += val;
                                 }
-                                if (row[7] && !nameOut.includes("tổng")) {
-                                    totalOut += parseInt(row[7].toString().replace(/[^0-9]/g, "")) || 0;
+                                if (row[7] && !labelOut.includes("tổng")) {
+                                    let val = parseInt(row[7].toString().replace(/[^0-9]/g, ""));
+                                    if (!isNaN(val)) totalOut += val;
                                 }
                             }
                         }
@@ -222,7 +222,7 @@
             }
         });
 
-        const sorted = Object.values(stats).sort((a, b) => a.group.localeCompare(b.group) || b.pts - a.pts);
+        const sorted = Object.values(stats).sort((a, b) => (a.group || "").localeCompare(b.group || "") || b.pts - a.pts);
         const bxhBody = document.querySelector('#table-standings tbody');
         bxhBody.innerHTML = "";
         let currentGroup = "", rank = 0;
