@@ -113,7 +113,6 @@
         }
     }
 
-    // Hàm load Điều lệ riêng vì nó hiển thị dạng text/list thay vì bảng thô
     function loadRulesData(url) {
         Papa.parse(url + "&t=" + new Date().getTime(), {
             download: true, header: false,
@@ -125,7 +124,7 @@
                 data.forEach(row => {
                     if (row[0] && row[0].trim() !== "") {
                         const li = document.createElement('li');
-                        li.innerHTML = row[0]; // Cho phép format HTML nếu có trong cell
+                        li.innerHTML = row[0];
                         ul.appendChild(li);
                     }
                 });
@@ -165,6 +164,8 @@
                     });
                     index === 0 ? thead.appendChild(tr) : tbody.appendChild(tr);
 
+                    // Logic: Chỉ lấy dữ liệu từ sheet Lịch thi đấu để tính BXH
+                    // row[1]: Đội thi đấu, row[2]: Bảng, row[3]: Tỷ số
                     if (targetId === 'table-matches' && index > 0 && row[1] && row[3]) {
                         matchResults.push({ group: row[2], teams: row[1], score: row[3] });
                     }
@@ -185,19 +186,35 @@
     function updateStandings(matches) {
         let stats = {};
         matches.forEach(m => {
-            if (!m.score.includes('-')) return;
-            let teams = m.teams.split(/ vs /i).map(t => t.trim());
+            // Chỉ quan tâm tỷ số có định dạng X-Y và khác 0-0
+            if (!m.score || !m.score.includes('-')) return;
             let scores = m.score.split('-').map(s => parseInt(s.trim()));
-            if (teams.length < 2 || isNaN(scores[0])) return;
-            teams.forEach(name => { if (!stats[name]) stats[name] = { name, group: m.group, played: 0, win: 0, lose: 0, pts: 0 }; });
-            stats[teams[0]].played++; stats[teams[1]].played++;
-            if (scores[0] > scores[1]) { stats[teams[0]].win++; stats[teams[0]].pts++; stats[teams[1]].lose++; }
-            else if (scores[1] > scores[0]) { stats[teams[1]].win++; stats[teams[1]].pts++; stats[teams[0]].lose++; }
+            if (isNaN(scores[0]) || isNaN(scores[1]) || (scores[0] === 0 && scores[1] === 0)) return;
+
+            let teams = m.teams.split(/ vs /i).map(t => t.trim());
+            if (teams.length < 2) return;
+
+            teams.forEach(name => { 
+                if (!stats[name]) stats[name] = { name, group: m.group, played: 0, win: 0, lose: 0, pts: 0 }; 
+            });
+
+            stats[teams[0]].played++; 
+            stats[teams[1]].played++;
+
+            if (scores[0] > scores[1]) { 
+                stats[teams[0]].win++; stats[teams[0]].pts++; 
+                stats[teams[1]].lose++; 
+            } else if (scores[1] > scores[0]) { 
+                stats[teams[1]].win++; stats[teams[1]].pts++; 
+                stats[teams[0]].lose++; 
+            }
         });
+
         const sorted = Object.values(stats).sort((a, b) => a.group.localeCompare(b.group) || b.pts - a.pts);
         const bxhBody = document.querySelector('#table-standings tbody');
         bxhBody.innerHTML = "";
         let currentGroup = "", rank = 0;
+
         sorted.forEach(s => {
             if (s.group !== currentGroup) { currentGroup = s.group; rank = 1; } else { rank++; }
             const tr = document.createElement('tr');
