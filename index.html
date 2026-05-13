@@ -143,7 +143,7 @@
                     const tbody = container.querySelector('tbody');
                     if (targetId !== 'table-standings') { thead.innerHTML = ""; tbody.innerHTML = ""; }
 
-                    let totalIn = 0, totalOut = 0;
+                    let finalIn = 0, finalOut = 0;
                     let matchResults = [];
 
                     data.forEach((row, index) => {
@@ -166,23 +166,17 @@
                             tbody.appendChild(tr);
 
                             if (targetId === 'table-matches') {
-                                // Mặc định cột Bảng=2, Đội=1, Tỷ số=3
                                 matchResults.push({ group: row[2], teams: row[1], score: row[3] });
                             }
                             
                             if (targetId === 'table-finance') {
-                                // Theo ảnh: Cột 1 là Số tiền thu, Cột 7 là Số tiền chi
-                                // Chỉ lấy các dòng không phải là dòng "Tổng thu/chi" ở cuối
-                                let labelIn = (row[0] || "").toString().toLowerCase();
-                                let labelOut = (row[5] || "").toString().toLowerCase();
-
-                                if (row[1] && !labelIn.includes("tổng")) {
-                                    let val = parseInt(row[1].toString().replace(/[^0-9]/g, ""));
-                                    if (!isNaN(val)) totalIn += val;
+                                // Chỉ tìm đúng dòng có chữ "tổng thu" hoặc "tổng chi" để lấy số tiền từ Excel
+                                let nameColOut = (row[5] || "").toString().toLowerCase();
+                                if (nameColOut.includes("tổng thu")) {
+                                    finalIn = parseInt(row[7].toString().replace(/[^0-9]/g, "")) || 0;
                                 }
-                                if (row[7] && !labelOut.includes("tổng")) {
-                                    let val = parseInt(row[7].toString().replace(/[^0-9]/g, ""));
-                                    if (!isNaN(val)) totalOut += val;
+                                if (nameColOut.includes("tổng chi")) {
+                                    finalOut = parseInt(row[7].toString().replace(/[^0-9]/g, "")) || 0;
                                 }
                             }
                         }
@@ -190,9 +184,9 @@
 
                     if (targetId === 'table-matches') updateStandings(matchResults);
                     if (targetId === 'table-finance') {
-                        document.getElementById('total-in').textContent = totalIn.toLocaleString() + "đ";
-                        document.getElementById('total-out').textContent = totalOut.toLocaleString() + "đ";
-                        document.getElementById('balance').textContent = (totalIn - totalOut).toLocaleString() + "đ";
+                        document.getElementById('total-in').textContent = finalIn.toLocaleString() + "đ";
+                        document.getElementById('total-out').textContent = finalOut.toLocaleString() + "đ";
+                        document.getElementById('balance').textContent = (finalIn - finalOut).toLocaleString() + "đ";
                     }
                 }
                 checkAllLoaded();
