@@ -36,20 +36,8 @@
         <button class="btn-refresh" onclick="refreshAllData()">🔄 Cập nhật dữ liệu</button>
         <p class="status" id="load-status">Đang nạp dữ liệu...</p>
     </div>
-
-    <!-- DANH SÁCH VẬN ĐỘNG VIÊN -->
-    <h2 class="section-title" onclick="toggleSection(this)">Danh Sách Vận Động Viên</h2>
-    <div class="collapsible-content">
-        <div class="table-responsive"><table id="table-athletes"><thead></thead><tbody></tbody></table></div>
-    </div>
-
-    <!-- LỊCH THI ĐẤU -->
-    <h2 class="section-title" onclick="toggleSection(this)">Lịch Thi Đấu & Kết Quả</h2>
-    <div class="collapsible-content">
-        <div class="table-responsive"><table id="table-matches"><thead></thead><tbody></tbody></table></div>
-    </div>
-
-    <!-- BẢNG XẾP HẠNG (Tự động tính) -->
+    
+	<!-- BẢNG XẾP HẠNG (Tự động tính) -->
     <h2 class="section-title no-collapse">Bảng Xếp Hạng Lâm Thời</h2>
     <div class="collapsible-content">
         <div class="table-responsive">
@@ -59,7 +47,19 @@
             </table>
         </div>
     </div>
-
+	
+    <!-- LỊCH THI ĐẤU -->
+    <h2 class="section-title" onclick="toggleSection(this)">Lịch Thi Đấu & Kết Quả</h2>
+    <div class="collapsible-content">
+        <div class="table-responsive"><table id="table-matches"><thead></thead><tbody></tbody></table></div>
+    </div>
+	
+	<!-- DANH SÁCH VẬN ĐỘNG VIÊN -->
+    <h2 class="section-title" onclick="toggleSection(this)">Danh Sách Vận Động Viên</h2>
+    <div class="collapsible-content">
+        <div class="table-responsive"><table id="table-athletes"><thead></thead><tbody></tbody></table></div>
+    </div>
+    
     <!-- QUẢN LÝ THU CHI -->
     <h2 class="section-title" onclick="toggleSection(this)">Quản Lý Thu Chi</h2>
     <div class="collapsible-content">
