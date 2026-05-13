@@ -9,73 +9,36 @@
         :root { --primary: #2c3e50; --secondary: #27ae60; --light: #f4f7f6; --danger: #e74c3c; --info: #3498db; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--light); padding: 10px; margin: 0; }
         .container { max-width: 1000px; margin: auto; background: white; padding: 15px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); box-sizing: border-box; }
-        
         h1 { text-align: center; color: var(--primary); margin-bottom: 10px; font-size: 1.5rem; }
         .controls { text-align: center; margin-bottom: 20px; }
         .btn-refresh { background: var(--secondary); color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; transition: 0.3s; }
         .btn-refresh:hover { background: #219150; transform: scale(1.05); }
-
         .status { text-align: center; color: #666; font-style: italic; margin-bottom: 15px; font-size: 0.8rem; height: 1em; }
         .table-responsive { width: 100%; overflow-x: auto; margin-top: 15px; }
         table { width: 100%; border-collapse: collapse; min-width: 500px; }
         th, td { border: 1px solid #ddd; padding: 12px 8px; text-align: center; font-size: 0.9rem; }
         th { background: var(--secondary); color: white; }
-        
         .qualified { background-color: #e8f5e9 !important; font-weight: bold; color: #2e7d32; }
-        
-        .section-title { 
-            border-left: 5px solid var(--secondary); 
-            padding: 10px; 
-            margin-top: 20px; 
-            color: var(--primary); 
-            font-size: 1.2rem; 
-            background: #f8f9fa;
-            cursor: pointer;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+        .section-title { border-left: 5px solid var(--secondary); padding: 10px; margin-top: 20px; color: var(--primary); font-size: 1.2rem; background: #f8f9fa; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
         .section-title:not(.no-collapse)::after { content: '▾'; font-size: 0.8rem; transition: 0.3s; }
         .section-title.collapsed::after { content: '▸'; }
-        
         .finance-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-top: 15px; }
         .card { padding: 15px; border-radius: 8px; text-align: center; color: white; }
         .bg-total { background: var(--info); } .bg-spent { background: var(--danger); } .bg-remain { background: var(--secondary); }
-
-        #rules-content { padding: 15px; line-height: 1.6; color: #444; background: #fffdf0; border-radius: 5px; margin-top: 10px; }
-        .rule-item { margin-bottom: 8px; border-bottom: 1px dashed #ddd; padding-bottom: 5px; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <h1>🏸 LIVE: Chăm team 2026</h1>
-    
     <div class="controls">
         <button class="btn-refresh" onclick="refreshAllData()">🔄 Cập nhật dữ liệu</button>
         <p class="status" id="load-status">Đang nạp dữ liệu...</p>
     </div>
 
-    <h2 class="section-title no-collapse">Bảng Xếp Hạng (Tính theo cặp)</h2>
+    <h2 class="section-title no-collapse">Bảng Xếp Hạng</h2>
     <div class="collapsible-content">
-        <div class="table-responsive">
-            <table id="table-standings">
-                <thead>
-                    <tr><th>Bảng</th><th>Hạng</th><th>Đội</th><th>Trận</th><th>Thắng</th><th>Thua</th><th>Điểm</th><th>Trạng thái</th></tr>
-                </thead>
-                <tbody></tbody>
-            </table>
-        </div>
-    </div>
-
-    <h2 class="section-title" onclick="toggleSection(this)">Lịch Thi Đấu & Kết Quả</h2>
-    <div class="collapsible-content">
-        <div class="table-responsive"><table id="table-matches"><thead></thead><tbody></tbody></table></div>
-    </div>
-
-    <h2 class="section-title" onclick="toggleSection(this)">Danh Sách Vận Động Viên</h2>
-    <div class="collapsible-content">
-        <div class="table-responsive"><table id="table-players"><thead></thead><tbody></tbody></table></div>
+        <div class="table-responsive"><table id="table-standings"><thead><tr><th>Bảng</th><th>Hạng</th><th>Đội</th><th>Trận</th><th>Thắng</th><th>Thua</th><th>Điểm</th><th>Trạng thái</th></tr></thead><tbody></tbody></table></div>
     </div>
 
     <h2 class="section-title" onclick="toggleSection(this)">Quản Lý Thu Chi</h2>
@@ -87,19 +50,12 @@
         </div>
         <div class="table-responsive"><table id="table-finance"><thead></thead><tbody></tbody></table></div>
     </div>
-
-    <h2 class="section-title" onclick="toggleSection(this)">Điều Lệ Giải Đấu</h2>
-    <div class="collapsible-content">
-        <div id="rules-content">Đang tải điều lệ...</div>
-    </div>
 </div>
 
 <script>
     const sheetLinks = {
         matches: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRkUoFtqaOaU8pLTLpo6FAd4rdqgH0JPg0tpqP0C8MeiQ9cfD6s9R4-CgDPjbwTicqrGWNzXi25u1dI/pub?gid=1302524989&single=true&output=csv",
-        players: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRkUoFtqaOaU8pLTLpo6FAd4rdqgH0JPg0tpqP0C8MeiQ9cfD6s9R4-CgDPjbwTicqrGWNzXi25u1dI/pub?gid=315332621&single=true&output=csv",
-        finance: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRkUoFtqaOaU8pLTLpo6FAd4rdqgH0JPg0tpqP0C8MeiQ9cfD6s9R4-CgDPjbwTicqrGWNzXi25u1dI/pub?gid=405520871&single=true&output=csv",
-        rules: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRkUoFtqaOaU8pLTLpo6FAd4rdqgH0JPg0tpqP0C8MeiQ9cfD6s9R4-CgDPjbwTicqrGWNzXi25u1dI/pub?gid=1907496499&single=true&output=csv"
+        finance: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRkUoFtqaOaU8pLTLpo6FAd4rdqgH0JPg0tpqP0C8MeiQ9cfD6s9R4-CgDPjbwTicqrGWNzXi25u1dI/pub?gid=405520871&single=true&output=csv"
     };
 
     let loadingCount = 0;
@@ -114,16 +70,13 @@
         loadingCount = 0;
         document.getElementById('load-status').textContent = "Đang làm mới...";
         loadSheetData(sheetLinks.matches, 'table-matches');
-        loadSheetData(sheetLinks.players, 'table-players');
         loadSheetData(sheetLinks.finance, 'table-finance');
-        loadSheetData(sheetLinks.rules, 'rules-content');
     }
 
     function checkAllLoaded() {
         loadingCount++;
-        if (loadingCount >= 4) {
-            const now = new Date();
-            document.getElementById('load-status').textContent = "Cập nhật lúc: " + now.toLocaleTimeString('vi-VN');
+        if (loadingCount >= 2) {
+            document.getElementById('load-status').textContent = "Cập nhật lúc: " + new Date().toLocaleTimeString('vi-VN');
         }
     }
 
@@ -134,60 +87,52 @@
             complete: function(results) {
                 const data = results.data;
                 const container = document.getElementById(targetId);
-                if (!container) { checkAllLoaded(); return; }
+                
+                let finalIn = 0, finalOut = 0;
+                let matchResults = [];
 
-                if (targetId === 'rules-content') {
-                    container.innerHTML = data.map(row => row[0] ? `<div class="rule-item">${row[0]}</div>` : '').join('');
-                } else {
-                    const thead = container.querySelector('thead');
-                    const tbody = container.querySelector('tbody');
-                    if (targetId !== 'table-standings') { thead.innerHTML = ""; tbody.innerHTML = ""; }
-
-                    let finalIn = 0, finalOut = 0;
-                    let matchResults = [];
+                if (targetId === 'table-finance') {
+                    const tbody = document.querySelector('#table-finance tbody') || document.createElement('tbody');
+                    const thead = document.querySelector('#table-finance thead') || document.createElement('thead');
+                    document.getElementById('table-finance').innerHTML = "";
+                    document.getElementById('table-finance').appendChild(thead);
+                    document.getElementById('table-finance').appendChild(tbody);
 
                     data.forEach((row, index) => {
                         if (row.join('').trim().length === 0) return;
-                        if (index === 0) {
-                            const tr = document.createElement('tr');
-                            row.forEach(cell => {
-                                const th = document.createElement('th');
-                                th.textContent = cell;
-                                tr.appendChild(th);
-                            });
-                            thead.appendChild(tr);
-                        } else {
-                            const tr = document.createElement('tr');
-                            row.forEach(cell => {
-                                const td = document.createElement('td');
-                                td.textContent = cell;
-                                tr.appendChild(td);
-                            });
-                            tbody.appendChild(tr);
+                        
+                        const tr = document.createElement('tr');
+                        row.forEach((cell, i) => {
+                            const el = index === 0 ? document.createElement('th') : document.createElement('td');
+                            el.textContent = cell;
+                            tr.appendChild(el);
 
-                            if (targetId === 'table-matches') {
-                                matchResults.push({ group: row[2], teams: row[1], score: row[3] });
+                            // Quét tìm từ khóa "Tổng thu" hoặc "Tổng chi" trong bất kỳ ô nào
+                            let cleanText = cell.toString().toLowerCase().trim();
+                            if (cleanText === "tổng thu" && row[i+1]) {
+                                finalIn = parseInt(row[i+1].toString().replace(/[^0-9]/g, "")) || 0;
                             }
-                            
-                            if (targetId === 'table-finance') {
-                                // Chỉ tìm đúng dòng có chữ "tổng thu" hoặc "tổng chi" để lấy số tiền từ Excel
-                                let nameColOut = (row[5] || "").toString().toLowerCase();
-                                if (nameColOut.includes("tổng thu")) {
-                                    finalIn = parseInt(row[7].toString().replace(/[^0-9]/g, "")) || 0;
-                                }
-                                if (nameColOut.includes("tổng chi")) {
-                                    finalOut = parseInt(row[7].toString().replace(/[^0-9]/g, "")) || 0;
-                                }
+                            if (cleanText === "tổng chi" && row[i+1]) {
+                                finalOut = parseInt(row[i+1].toString().replace(/[^0-9]/g, "")) || 0;
                             }
-                        }
+                        });
+                        index === 0 ? thead.appendChild(tr) : tbody.appendChild(tr);
                     });
 
-                    if (targetId === 'table-matches') updateStandings(matchResults);
-                    if (targetId === 'table-finance') {
-                        document.getElementById('total-in').textContent = finalIn.toLocaleString() + "đ";
-                        document.getElementById('total-out').textContent = finalOut.toLocaleString() + "đ";
-                        document.getElementById('balance').textContent = (finalIn - finalOut).toLocaleString() + "đ";
-                    }
+                    // Cập nhật 3 thẻ ở trên
+                    document.getElementById('total-in').textContent = finalIn.toLocaleString() + "đ";
+                    document.getElementById('total-out').textContent = finalOut.toLocaleString() + "đ";
+                    document.getElementById('balance').textContent = (finalIn - finalOut).toLocaleString() + "đ";
+                }
+                
+                // Logic xử lý trận đấu để cập nhật BXH (giữ nguyên)
+                if (targetId === 'table-matches') {
+                    data.forEach((row, index) => {
+                        if (index > 0 && row[1] && row[3]) {
+                            matchResults.push({ group: row[2], teams: row[1], score: row[3] });
+                        }
+                    });
+                    updateStandings(matchResults);
                 }
                 checkAllLoaded();
             }
@@ -197,26 +142,16 @@
     function updateStandings(matches) {
         let stats = {};
         matches.forEach(m => {
-            if (!m.score || !m.score.includes('-') || m.score.trim() === "0-0") return;
+            if (!m.score.includes('-')) return;
             let teams = m.teams.split(/ vs /i).map(t => t.trim());
-            if (teams.length < 2) return;
             let scores = m.score.split('-').map(s => parseInt(s.trim()));
-            
-            teams.forEach(name => {
-                if (!stats[name]) stats[name] = { name: name, group: m.group, played: 0, win: 0, lose: 0, pts: 0 };
-            });
-
+            if (teams.length < 2 || isNaN(scores[0])) return;
+            teams.forEach(name => { if (!stats[name]) stats[name] = { name, group: m.group, played: 0, win: 0, lose: 0, pts: 0 }; });
             stats[teams[0]].played++; stats[teams[1]].played++;
-            if (scores[0] > scores[1]) {
-                stats[teams[0]].win++; stats[teams[0]].pts++;
-                stats[teams[1]].lose++;
-            } else if (scores[1] > scores[0]) {
-                stats[teams[1]].win++; stats[teams[1]].pts++;
-                stats[teams[0]].lose++;
-            }
+            if (scores[0] > scores[1]) { stats[teams[0]].win++; stats[teams[0]].pts++; stats[teams[1]].lose++; }
+            else if (scores[1] > scores[0]) { stats[teams[1]].win++; stats[teams[1]].pts++; stats[teams[0]].lose++; }
         });
-
-        const sorted = Object.values(stats).sort((a, b) => (a.group || "").localeCompare(b.group || "") || b.pts - a.pts);
+        const sorted = Object.values(stats).sort((a, b) => a.group.localeCompare(b.group) || b.pts - a.pts);
         const bxhBody = document.querySelector('#table-standings tbody');
         bxhBody.innerHTML = "";
         let currentGroup = "", rank = 0;
